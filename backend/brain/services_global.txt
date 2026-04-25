@@ -1,0 +1,33 @@
+    def generate_global_faculty_insights(self, faculty_name, all_assignments):
+        if not self.enabled:
+            return "AI Insights are currently disabled (Missing API Key)."
+
+        summary_data = []
+        for asgn in all_assignments[:5]: # Take last 5 for context
+            if asgn.processed_data:
+                avg = asgn.processed_data.get('totals', {}).get('avg_of_avgs', 'N/A')
+                course = asgn.evaluation_instance.course.name
+                semester = f"{asgn.evaluation_instance.semester} {asgn.evaluation_instance.year}"
+                summary_data.append(f"Course: {course} ({semester}), Avg Score: {avg}")
+
+        summary_str = "\n".join(summary_data)
+
+        prompt = f"""
+        Provide a global performance summary for faculty member {faculty_name} based on their recent courses:
+        
+        Recent History:
+        {summary_str}
+        
+        Please provide:
+        1. A 'Career Trajectory' summary (Is performance improving, stable, or declining?).
+        2. Key themes across all courses (What is this faculty member consistently good at?).
+        3. Strategic advice for professional development.
+        
+        Format the output with professional headings and a supportive tone.
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            return f"Error generating global insights: {str(e)}"
