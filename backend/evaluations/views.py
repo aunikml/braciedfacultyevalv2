@@ -169,3 +169,49 @@ class ProgramFacultyView(APIView):
             f['courses'] = list(courses)
 
         return Response(faculty_data)
+
+
+class SupervisorDashboardView(APIView):
+    """Get all faculty and program supervisors with their assignment counts (excluding self)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        roles = user.get_role_list()
+
+        if 'SUPERVISOR' not in roles:
+            return Response([])
+
+        faculty_users = (
+            User.objects
+            .filter(role__in=['FACULTY', 'PROGRAM_SUPERVISOR'])
+            .exclude(id=user.id)
+            .order_by('first_name', 'last_name')
+        )
+        faculty_data = FacultySmallSerializer(faculty_users, many=True).data
+
+        for f in faculty_data:
+            assignments = (
+                FacultyAssignment.objects
+                .filter(faculty_id=f['id'])
+                .select_related('evaluation_instance', 'evaluation_instance__course')
+                .order_by('-evaluation_instance__year', 'evaluation_instance__semester')
+            )
+            f['assignments_count'] = assignments.count()
+            f['processed_count'] = assignments.filter(processed_data__isnull=False).count()
+            courses = (
+                EvaluationInstance.objects
+                .filter(assignments__faculty_id=f['id'])
+                .values_list('course__code', flat=True)
+                .distinct()
+            )
+            f['courses'] = list(courses)
+            program_names = (
+                EvaluationInstance.objects
+                .filter(assignments__faculty_id=f['id'])
+                .values_list('program__name', flat=True)
+                .distinct()
+            )
+            f['programs'] = list(program_names)
+
+        return Response(faculty_data)

@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import Supervision from './pages/Supervision';
 import FacultySupervisionDetail from './pages/FacultySupervisionDetail';
 import ProgramSupervisorDashboard from './pages/ProgramSupervisorDashboard';
+import SupervisorDashboard from './pages/SupervisorDashboard';
 
 
 import RoleBasedRedirect from './components/RoleBasedRedirect';
@@ -37,7 +38,7 @@ function App() {
               <Route index element={<RoleBasedRedirect />} />
               
               <Route path="my-reports" element={
-                <ProtectedRoute roles={['FACULTY', 'PROGRAM_SUPERVISOR']}>
+                <ProtectedRoute roles={['FACULTY', 'PROGRAM_SUPERVISOR', 'SUPERVISOR']}>
                   <Dashboard />
                 </ProtectedRoute>
               } />
@@ -80,6 +81,11 @@ function App() {
               <Route path="program-dashboard" element={
                 <ProtectedRoute roles={['PROGRAM_SUPERVISOR']}>
                   <ProgramSupervisorDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="supervisor-dashboard" element={
+                <ProtectedRoute roles={['SUPERVISOR']}>
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               } />
             </Route>

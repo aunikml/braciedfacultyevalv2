@@ -21,7 +21,7 @@ const RoleBasedRedirect = () => {
     return <Navigate to="/program-dashboard" replace />;
   }
   if (roles.includes('SUPERVISOR')) {
-    return <Navigate to="/supervision" replace />;
+    return <Navigate to="/supervisor-dashboard" replace />;
   }
   if (roles.includes('ADMIN') || roles.includes('MANAGER')) {
     return <Navigate to="/evaluations" replace />;

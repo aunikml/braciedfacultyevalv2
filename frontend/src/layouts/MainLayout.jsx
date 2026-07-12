@@ -58,11 +58,11 @@ const MainLayout = () => {
   };
 
   const menuItems = [
-    { text: 'My Reports', icon: <LayoutDashboard size={22} />, path: '/my-reports', roles: ['FACULTY', 'PROGRAM_SUPERVISOR'] },
+    { text: 'My Reports', icon: <LayoutDashboard size={22} />, path: '/my-reports', roles: ['FACULTY', 'PROGRAM_SUPERVISOR', 'SUPERVISOR'] },
 
     { text: 'Course Evaluations', icon: <BarChart3 size={22} />, path: '/evaluations', roles: ['ADMIN', 'MANAGER'] },
     { text: 'Program Dashboard', icon: <BarChart3 size={22} />, path: '/program-dashboard', roles: ['PROGRAM_SUPERVISOR'] },
-    { text: 'Supervision', icon: <Users size={22} />, path: '/supervision', roles: ['SUPERVISOR'] },
+    { text: 'Supervisor Dashboard', icon: <BarChart3 size={22} />, path: '/supervisor-dashboard', roles: ['SUPERVISOR'] },
     { text: 'Control Panel', icon: <Settings size={22} />, path: '/control-panel', roles: ['ADMIN', 'MANAGER'] },
   ];
 
