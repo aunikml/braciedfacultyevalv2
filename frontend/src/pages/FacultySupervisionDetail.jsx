@@ -22,37 +22,33 @@ const FacultySupervisionDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const userRes = await client.get(`/users/manage/${facultyId}/`);
+        if (!cancelled) setFaculty(userRes.data);
+
+        const asgnRes = await client.get('/evaluations/assignments/');
+        if (cancelled) return;
+        const filtered = asgnRes.data.filter(a => a.faculty === parseInt(facultyId));
+        setAssignments(filtered);
+        setFilteredAssignments(filtered);
+      } catch (err) {
+        console.error('Failed to fetch faculty supervision data');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, [facultyId]);
 
   useEffect(() => {
-    applyFilters();
-  }, [searchQuery, semesterFilter, yearFilter, assignments]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // Fetch faculty details
-      const userRes = await client.get(`/users/manage/${facultyId}/`);
-      setFaculty(userRes.data);
-
-      // Fetch assignments
-      const asgnRes = await client.get('/evaluations/assignments/');
-      const filtered = asgnRes.data.filter(a => a.faculty === parseInt(facultyId));
-      setAssignments(filtered);
-      setFilteredAssignments(filtered);
-    } catch (err) {
-      console.error('Failed to fetch faculty supervision data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
     let filtered = [...assignments];
-    
+
     if (searchQuery) {
-      filtered = filtered.filter(a => 
+      filtered = filtered.filter(a =>
         a.evaluation_instance_details.course_details.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.evaluation_instance_details.course_details.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -71,7 +67,7 @@ const FacultySupervisionDetail = () => {
     }
     
     setFilteredAssignments(filtered);
-  };
+  }, [searchQuery, semesterFilter, yearFilter, assignments]);
 
   if (loading) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>

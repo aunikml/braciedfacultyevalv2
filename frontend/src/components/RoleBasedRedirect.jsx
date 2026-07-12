@@ -14,24 +14,23 @@ const RoleBasedRedirect = () => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  const roles = user.roles?.map(r => r.name) || [user.role];
+  const roles = user.roles?.length ? user.roles : [user.role];
 
-  // Faculty always lands on My Reports
+  // Supervisory roles take priority over faculty
+  if (roles.includes('PROGRAM_SUPERVISOR')) {
+    return <Navigate to="/program-dashboard" replace />;
+  }
+  if (roles.includes('SUPERVISOR')) {
+    return <Navigate to="/supervision" replace />;
+  }
+  if (roles.includes('ADMIN') || roles.includes('MANAGER')) {
+    return <Navigate to="/evaluations" replace />;
+  }
   if (roles.includes('FACULTY')) {
     return <Navigate to="/my-reports" replace />;
   }
 
-  // Supervisors land on Supervision
-  if (roles.includes('PROGRAM_SUPERVISOR') || roles.includes('SUPERVISOR')) {
-    return <Navigate to="/supervision" replace />;
-  }
-
-  // Admins/Managers land on Evaluations or Control Panel
-  if (roles.includes('ADMIN') || roles.includes('MANAGER')) {
-    return <Navigate to="/evaluations" replace />;
-  }
-
-  return <Navigate to="/my-reports" replace />;
+  return <Navigate to="/login" replace />;
 };
 
 export default RoleBasedRedirect;

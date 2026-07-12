@@ -21,7 +21,7 @@ const Evaluations = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editInstance, setEditInstance] = useState(null);
   const [formData, setFormData] = useState({
-    program: '', course: '', batch_category: '', batch_name: '', semester: 'Fall', year: new Date().getFullYear()
+    program: '', course: '', batch_category: '', batch_name: '', semester: 'Fall', year: new Date().getFullYear(), total_students: ''
   });
   
   const [courses, setCourses] = useState([]);
@@ -32,27 +32,24 @@ const Evaluations = () => {
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchData();
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [instRes, progRes] = await Promise.all([
+          client.get(`/evaluations/instances/?program_id=${selectedProgram}`),
+          client.get('/academic/programs/')
+        ]);
+        if (cancelled) return;
+        setInstances(instRes.data);
+        setPrograms(progRes.data);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, [selectedProgram]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([fetchInstances(), fetchPrograms()]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchInstances = async () => {
-    const res = await client.get(`/evaluations/instances/?program_id=${selectedProgram}`);
-    setInstances(res.data);
-  };
-
-  const fetchPrograms = async () => {
-    const res = await client.get('/academic/programs/');
-    setPrograms(res.data);
-  };
 
   const handleProgramChange = (e) => {
     const pId = e.target.value;
@@ -75,7 +72,8 @@ const Evaluations = () => {
         batch_category: item.batch_category,
         batch_name: item.batch_name,
         semester: item.semester,
-        year: item.year
+        year: item.year,
+        total_students: item.total_students || ''
       });
       // Pre-load dependencies for edit
       const prog = programs.find(p => p.id === item.program);
@@ -84,7 +82,7 @@ const Evaluations = () => {
     } else {
       setEditInstance(null);
       setFormData({
-        program: '', course: '', batch_category: '', batch_name: '', semester: 'Fall', year: new Date().getFullYear()
+        program: '', course: '', batch_category: '', batch_name: '', semester: 'Fall', year: new Date().getFullYear(), total_students: ''
       });
       setCourses([]);
       setBatchCats([]);
@@ -329,15 +327,18 @@ const Evaluations = () => {
             />
             
             <Grid container spacing={2}>
-              <Grid xs={12} sm={6}>
+              <Grid xs={12} sm={4}>
                 <TextField select fullWidth label="Semester" value={formData.semester} onChange={(e) => setFormData({...formData, semester: e.target.value})} margin="normal" required>
                   <MenuItem value="Fall">Fall</MenuItem>
                   <MenuItem value="Summer">Summer</MenuItem>
                   <MenuItem value="Spring">Spring</MenuItem>
                 </TextField>
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid xs={12} sm={4}>
                 <TextField fullWidth label="Year" type="number" value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} margin="normal" required />
+              </Grid>
+              <Grid xs={12} sm={4}>
+                <TextField fullWidth label="Total Students" type="number" value={formData.total_students} onChange={(e) => setFormData({...formData, total_students: e.target.value})} margin="normal" required />
               </Grid>
             </Grid>
             

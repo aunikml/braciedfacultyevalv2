@@ -21,28 +21,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchAssignments();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await client.get('/evaluations/assignments/');
+        if (cancelled) return;
+        const processed = response.data.filter(a => Number(a.faculty) === Number(user.id));
+        setAssignments(processed);
+        setFilteredAssignments(processed);
+      } catch (err) {
+        console.error('Failed to fetch reports');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    applyFilters();
-  }, [searchQuery, semesterFilter, yearFilter, assignments]);
-
-  const fetchAssignments = async () => {
-    try {
-      const response = await client.get('/evaluations/assignments/');
-      // Filter for reports with processed data AND belonging to the current user
-      const processed = response.data.filter(a => a.processed_data && a.faculty === user.id);
-      setAssignments(processed);
-      setFilteredAssignments(processed);
-    } catch (err) {
-      console.error('Failed to fetch reports');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
     let filtered = [...assignments];
     
     if (searchQuery) {
@@ -65,7 +62,7 @@ const Dashboard = () => {
     }
     
     setFilteredAssignments(filtered);
-  };
+  }, [searchQuery, semesterFilter, yearFilter, assignments]);
 
   if (loading) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>

@@ -10,7 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import UserManagement from '../components/ControlPanel/UserManagement';
 import AcademicManagement from '../components/ControlPanel/AcademicManagement';
-import SystemSettings from '../components/ControlPanel/SystemSettings';
+
 
 const TabPanel = ({ children, value, index, ...other }) => (
   <div
@@ -63,7 +63,7 @@ const ControlPanel = () => {
         >
           <Tab label="User Management" />
           <Tab label="Programs & Courses" />
-          <Tab label="System Settings" />
+
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
@@ -72,9 +72,7 @@ const ControlPanel = () => {
         <TabPanel value={tabValue} index={1}>
           <AcademicManagement />
         </TabPanel>
-        <TabPanel value={tabValue} index={2}>
-          <SystemSettings />
-        </TabPanel>
+
       </Paper>
     </Container>
   );

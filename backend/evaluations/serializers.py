@@ -19,7 +19,7 @@ class EvaluationInstanceSmallSerializer(serializers.ModelSerializer):
         model = EvaluationInstance
         fields = (
             'id', 'program', 'course', 'batch_category', 'batch_name', 
-            'semester', 'year', 'program_details', 
+            'semester', 'year', 'total_students', 'program_details', 
             'course_details', 'batch_category_details', 'course_processed_data'
         )
 
@@ -42,7 +42,7 @@ class EvaluationInstanceSerializer(serializers.ModelSerializer):
         model = EvaluationInstance
         fields = (
             'id', 'program', 'course', 'batch_category', 'batch_name', 
-            'semester', 'year', 'assignments', 'program_details', 
+            'semester', 'year', 'total_students', 'assignments', 'program_details', 
             'course_details', 'batch_category_details', 'created_at',
             'course_csv_file', 'course_processed_data', 'course_total_respondents'
         )

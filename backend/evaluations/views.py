@@ -1,13 +1,17 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import EvaluationInstance, FacultyAssignment
-from .serializers import EvaluationInstanceSerializer, FacultyAssignmentSerializer
+from .serializers import EvaluationInstanceSerializer, FacultyAssignmentSerializer, FacultySmallSerializer
 from .utils.csv_parser import parse_faculty_evaluation_csv, parse_course_evaluation_csv
 from users.permissions import IsAdminManagerOrReadOnly
 from django.db import models
 from django.db.models import Case, When, Value, IntegerField
+from django.contrib.auth import get_user_model
 import os
+
+User = get_user_model()
 
 class EvaluationInstanceViewSet(viewsets.ModelViewSet):
     queryset = EvaluationInstance.objects.all().order_by('-created_at')
@@ -70,19 +74,16 @@ class FacultyAssignmentViewSet(viewsets.ModelViewSet):
             # Admin/Supervisors see everything
             pass
         elif 'PROGRAM_SUPERVISOR' in roles and user.assigned_program:
-            # Program Supervisor sees their program, AND their own courses (if any in other programs)
-            if 'FACULTY' in roles:
-                queryset = queryset.filter(
-                    models.Q(evaluation_instance__program=user.assigned_program) | 
-                    models.Q(faculty=user)
-                )
-            else:
-                queryset = queryset.filter(evaluation_instance__program=user.assigned_program)
+            # Program Supervisor sees their program AND their own courses
+            queryset = queryset.filter(
+                models.Q(evaluation_instance__program=user.assigned_program) | 
+                models.Q(faculty=user)
+            )
         elif 'FACULTY' in roles:
             # Pure faculty only see their own
             queryset = queryset.filter(faculty=user)
         else:
-            queryset = queryset.filter(id=-1)
+            queryset = queryset.filter(faculty=user) if user.is_authenticated else queryset.filter(id=-1)
         
         # Custom sorting: Year (desc), then Semester (Fall > Summer > Spring)
         queryset = queryset.annotate(
@@ -120,3 +121,51 @@ class FacultyAssignmentViewSet(viewsets.ModelViewSet):
             return Response(FacultyAssignmentSerializer(assignment).data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProgramFacultyView(APIView):
+    """Get unique faculty members who have assignments in evaluation instances for a program."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        roles = user.get_role_list()
+
+        program_id = request.query_params.get('program_id')
+
+        if 'PROGRAM_SUPERVISOR' in roles:
+            program_id = user.assigned_program_id
+        elif not program_id and not any(r in ['ADMIN', 'MANAGER', 'SUPERVISOR'] for r in roles):
+            return Response([])
+
+        if not program_id:
+            return Response([])
+
+        faculty_ids = (
+            FacultyAssignment.objects
+            .filter(evaluation_instance__program_id=program_id)
+            .values_list('faculty_id', flat=True)
+            .distinct()
+        )
+
+        faculty_users = User.objects.filter(id__in=faculty_ids).order_by('first_name', 'last_name')
+        faculty_data = FacultySmallSerializer(faculty_users, many=True).data
+
+        for f in faculty_data:
+            assignments = (
+                FacultyAssignment.objects
+                .filter(faculty_id=f['id'], evaluation_instance__program_id=program_id)
+                .select_related('evaluation_instance', 'evaluation_instance__course')
+                .order_by('-evaluation_instance__year', 'evaluation_instance__semester')
+            )
+            f['assignments_count'] = assignments.count()
+            f['processed_count'] = assignments.filter(processed_data__isnull=False).count()
+            courses = (
+                EvaluationInstance.objects
+                .filter(assignments__faculty_id=f['id'], program_id=program_id)
+                .values_list('course__code', flat=True)
+                .distinct()
+            )
+            f['courses'] = list(courses)
+
+        return Response(faculty_data)

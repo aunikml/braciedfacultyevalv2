@@ -22,9 +22,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await client.get('/users/profile/');
       setUser(response.data);
+      return response.data;
     } catch (error) {
       console.error('Failed to fetch profile', error);
       logout();
+      return null;
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('access_token', response.data.access);
     localStorage.setItem('refresh_token', response.data.refresh);
     setUser(response.data.user);
-    return response.data.user;
+    try {
+      const profile = await client.get('/users/profile/');
+      setUser(profile.data);
+      return profile.data;
+    } catch {
+      return response.data.user;
+    }
   };
 
   const logout = () => {
@@ -49,7 +57,12 @@ export const AuthProvider = ({ children }) => {
       old_password: oldPassword,
       new_password: newPassword,
     });
-    setUser({ ...user, must_change_password: false });
+    try {
+      const profile = await client.get('/users/profile/');
+      setUser(profile.data);
+    } catch {
+      setUser((prev) => prev ? { ...prev, must_change_password: false } : null);
+    }
   };
 
   const value = {

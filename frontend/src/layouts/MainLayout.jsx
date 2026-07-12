@@ -26,7 +26,7 @@ import {
   Settings,
   Users,
   BarChart3,
-  Sparkles
+
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
@@ -58,15 +58,17 @@ const MainLayout = () => {
   };
 
   const menuItems = [
-    { text: 'My Reports', icon: <LayoutDashboard size={22} />, path: '/my-reports', roles: ['FACULTY'] },
-    { text: 'My AI Insights', icon: <Sparkles size={22} />, path: '/my-ai-insights', roles: ['FACULTY'] },
+    { text: 'My Reports', icon: <LayoutDashboard size={22} />, path: '/my-reports', roles: ['FACULTY', 'PROGRAM_SUPERVISOR'] },
+
     { text: 'Course Evaluations', icon: <BarChart3 size={22} />, path: '/evaluations', roles: ['ADMIN', 'MANAGER'] },
-    { text: 'Supervision', icon: <Users size={22} />, path: '/supervision', roles: ['PROGRAM_SUPERVISOR', 'SUPERVISOR'] },
+    { text: 'Program Dashboard', icon: <BarChart3 size={22} />, path: '/program-dashboard', roles: ['PROGRAM_SUPERVISOR'] },
+    { text: 'Supervision', icon: <Users size={22} />, path: '/supervision', roles: ['SUPERVISOR'] },
     { text: 'Control Panel', icon: <Settings size={22} />, path: '/control-panel', roles: ['ADMIN', 'MANAGER'] },
   ];
 
+  const userRoles = user?.roles?.length ? user.roles : [user?.role];
   const filteredMenuItems = menuItems.filter(item => 
-    item.roles.some(role => user?.roles?.includes(role))
+    item.roles.some(role => userRoles.includes(role))
   );
 
   const drawer = (
@@ -98,10 +100,12 @@ const MainLayout = () => {
               </ListItemIcon>
               <ListItemText 
                 primary={item.text} 
-                primaryTypographyProps={{ 
-                  fontSize: '0.95rem', 
-                  fontWeight: location.pathname === item.path ? 700 : 500,
-                  color: location.pathname === item.path ? 'white' : 'inherit'
+                slotProps={{ 
+                  primary: { 
+                    fontSize: '0.95rem', 
+                    fontWeight: location.pathname === item.path ? 700 : 500,
+                    color: location.pathname === item.path ? 'white' : 'inherit'
+                  }
                 }}
               />
             </ListItemButton>

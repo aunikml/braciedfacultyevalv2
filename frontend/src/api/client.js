@@ -17,10 +17,15 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
+let isRedirecting = false;
+
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    if (!error.response) {
+      return Promise.reject(error);
+    }
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refresh_token');
@@ -35,6 +40,14 @@ client.interceptors.response.use(
         } catch (refreshError) {
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
+          if (!isRedirecting) {
+            isRedirecting = true;
+            window.location.href = '/login';
+          }
+        }
+      } else {
+        if (!isRedirecting) {
+          isRedirecting = true;
           window.location.href = '/login';
         }
       }

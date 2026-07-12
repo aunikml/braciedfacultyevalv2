@@ -17,6 +17,7 @@ class EvaluationInstance(models.Model):
     course_csv_file = models.FileField(upload_to='evaluations/course_csv/', null=True, blank=True)
     course_processed_data = models.JSONField(null=True, blank=True)
     course_total_respondents = models.IntegerField(default=0)
+    total_students = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

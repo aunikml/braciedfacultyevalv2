@@ -8,7 +8,7 @@ import { User, BookOpen, FileText, ChevronRight, BarChart, Search } from 'lucide
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import ProgramAIInsights from '../components/ProgramAIInsights';
+
 
 const Supervision = () => {
   const [programs, setPrograms] = useState([]);
@@ -20,47 +20,47 @@ const Supervision = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchInitialData();
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const progRes = await client.get('/academic/programs/');
+        if (!cancelled) setPrograms(progRes.data);
+
+        const targetProgram = user.role === 'PROGRAM_SUPERVISOR'
+          ? user.assigned_program
+          : progRes.data.length > 0 ? progRes.data[0].id : null;
+
+        if (targetProgram && !cancelled) setSelectedProgramId(targetProgram);
+      } catch (err) {
+        console.error('Failed to fetch initial data');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (selectedProgramId) {
-      fetchFaculties(selectedProgramId);
-    }
-  }, [selectedProgramId]);
-
-  const fetchInitialData = async () => {
-    setLoading(true);
-    try {
-      const progRes = await client.get('/academic/programs/');
-      setPrograms(progRes.data);
-      
-      if (user.role === 'PROGRAM_SUPERVISOR') {
-        setSelectedProgramId(user.assigned_program);
-      } else if (progRes.data.length > 0) {
-        setSelectedProgramId(progRes.data[0].id);
+    if (!selectedProgramId) return;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const userRes = await client.get('/users/manage/');
+        if (cancelled) return;
+        const filtered = userRes.data.filter(u => {
+          const uProgId = typeof u.assigned_program === 'object' ? u.assigned_program?.id : u.assigned_program;
+          return u.role === 'FACULTY' && uProgId === selectedProgramId;
+        });
+        setFaculties(filtered);
+      } catch (err) {
+        console.error('Failed to fetch faculties');
       }
-    } catch (err) {
-      console.error('Failed to fetch initial data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchFaculties = async (programId) => {
-    try {
-      // Get all faculty users
-      const userRes = await client.get('/users/manage/');
-      // Filter for faculty role and assigned program
-      const filtered = userRes.data.filter(u => {
-        const uProgId = typeof u.assigned_program === 'object' ? u.assigned_program?.id : u.assigned_program;
-        return u.role === 'FACULTY' && uProgId === programId;
-      });
-      setFaculties(filtered);
-    } catch (err) {
-      console.error('Failed to fetch faculties');
-    }
-  };
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [selectedProgramId]);
 
   const handleProgramChange = (event, newValue) => {
     setSelectedProgramId(newValue);

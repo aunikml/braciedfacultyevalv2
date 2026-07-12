@@ -23,7 +23,8 @@ const ProtectedRoute = ({ children, roles }) => {
     return <Navigate to="/change-password" replace />;
   }
 
-  if (roles && !roles.some(role => user.roles?.includes(role))) {
+  const effectiveRoles = user.roles?.length ? user.roles : [user.role];
+  if (roles && !roles.some(role => effectiveRoles.includes(role))) {
     return <Navigate to="/" replace />;
   }
 

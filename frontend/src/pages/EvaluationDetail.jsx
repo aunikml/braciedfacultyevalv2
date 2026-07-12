@@ -23,20 +23,25 @@ const EvaluationDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchInstance();
-    fetchFaculties();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [instRes, userRes] = await Promise.all([
+          client.get(`/evaluations/instances/${id}/`),
+          client.get('/users/manage/')
+        ]);
+        if (cancelled) return;
+        setInstance(instRes.data);
+        setFaculties(userRes.data.filter(u => u.role === 'FACULTY' || u.role === 'ADMIN'));
+      } catch (err) {
+        console.error('Failed to fetch data');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, [id]);
-
-  const fetchInstance = async () => {
-    const res = await client.get(`/evaluations/instances/${id}/`);
-    setInstance(res.data);
-    setLoading(false);
-  };
-
-  const fetchFaculties = async () => {
-    const res = await client.get('/users/manage/');
-    setFaculties(res.data.filter(u => u.role === 'FACULTY' || u.role === 'ADMIN'));
-  };
 
   const handleAssignFaculty = async () => {
     try {

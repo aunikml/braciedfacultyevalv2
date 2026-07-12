@@ -12,9 +12,9 @@ import Evaluations from './pages/Evaluations';
 import EvaluationDetail from './pages/EvaluationDetail';
 import FacultyReport from './pages/FacultyReport';
 import Dashboard from './pages/Dashboard';
-import MyReports from './pages/MyReports';
 import Supervision from './pages/Supervision';
 import FacultySupervisionDetail from './pages/FacultySupervisionDetail';
+import ProgramSupervisorDashboard from './pages/ProgramSupervisorDashboard';
 
 
 import RoleBasedRedirect from './components/RoleBasedRedirect';
@@ -37,14 +37,8 @@ function App() {
               <Route index element={<RoleBasedRedirect />} />
               
               <Route path="my-reports" element={
-                <ProtectedRoute roles={['FACULTY']}>
+                <ProtectedRoute roles={['FACULTY', 'PROGRAM_SUPERVISOR']}>
                   <Dashboard />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="my-ai-insights" element={
-                <ProtectedRoute roles={['FACULTY']}>
-                  <MyReports />
                 </ProtectedRoute>
               } />
 
@@ -74,13 +68,18 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="supervision" element={
-                <ProtectedRoute roles={['PROGRAM_SUPERVISOR', 'SUPERVISOR']}>
+                <ProtectedRoute roles={['SUPERVISOR']}>
                   <Supervision />
                 </ProtectedRoute>
               } />
               <Route path="supervision/faculty/:facultyId" element={
-                <ProtectedRoute roles={['PROGRAM_SUPERVISOR', 'SUPERVISOR']}>
+                <ProtectedRoute roles={['SUPERVISOR']}>
                   <FacultySupervisionDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="program-dashboard" element={
+                <ProtectedRoute roles={['PROGRAM_SUPERVISOR']}>
+                  <ProgramSupervisorDashboard />
                 </ProtectedRoute>
               } />
             </Route>

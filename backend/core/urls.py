@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/users/', include('users.urls')),
     path('api/academic/', include('academic.urls')),
     path('api/evaluations/', include('evaluations.urls')),
-    path('api/brain/', include('brain.urls')),
+
 ]
 
 from django.conf import settings

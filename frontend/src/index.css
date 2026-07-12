@@ -10,3 +10,35 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* PDF capture optimizations */
+.pdf-capture {
+  width: 800px !important;
+  max-width: 800px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: white !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.pdf-capture .no-print {
+  display: none !important;
+}
+
+.pdf-capture .report-chart-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  min-height: 280px;
+}
+
+.pdf-capture svg {
+  font-size: 12px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

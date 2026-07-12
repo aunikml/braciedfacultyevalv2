@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'users',
     'academic',
     'evaluations',
-    'brain',
+
 ]
 
 MIDDLEWARE = [
